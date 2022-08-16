@@ -33,7 +33,7 @@ describe("E2E test for customer", () => {
   });
 
   it("should list all customers", async () => {
-    const customer1 = await request(app)
+    await request(app)
       .post("/customer")
       .send({
         name: "John",
@@ -45,7 +45,7 @@ describe("E2E test for customer", () => {
         },
       });
 
-    const customer2 = await request(app)
+    await request(app)
       .post("/customer")
       .send({
         name: "Jane",
@@ -58,11 +58,32 @@ describe("E2E test for customer", () => {
       });
 
     const response = await request(app).get("/customer").send();
+    const customer1 = response.body.customers[0];
+    const customer2 = response.body.customers[1];
     expect(response.status).toBe(200);
     expect(response.body.customers.length).toBe(2);
-    expect(response.body.customers[0].name).toBe("John");
-    expect(response.body.customers[0].address.street).toBe("Street 1");
-    expect(response.body.customers[1].name).toBe("Jane");
-    expect(response.body.customers[1].address.street).toBe("Street 2");
+    expect(customer1.name).toBe("John");
+    expect(customer1.address.street).toBe("Street 1");
+    expect(customer2.name).toBe("Jane");
+    expect(customer2.address.street).toBe("Street 2");
+
+    const responseXML = await request(app)
+      .get("/customer")
+      .set("Accept", "application/xml")
+      .send();
+
+    expect(responseXML.status).toBe(200);
+    expect(responseXML.text).toContain(
+      `<?xml version="1.0" encoding="UTF-8"?>`
+    );
+    expect(responseXML.text).toContain(`<customers>`);
+    expect(responseXML.text).toContain(`<customer>`);
+    expect(responseXML.text).toContain(`<name>John</name>`);
+    expect(responseXML.text).toContain(`<address>`);
+    expect(responseXML.text).toContain(`<street>Street 1</street>`);
+    expect(responseXML.text).toContain(`<city>City 1</city>`);
+    expect(responseXML.text).toContain(`<number>123</number>`);
+    expect(responseXML.text).toContain(`<zip>12345</zip>`);
+    expect(responseXML.text).toContain(`</address>`);
   });
 });
